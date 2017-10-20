@@ -227,4 +227,129 @@ Generator return value: done
 
 一类是`generator`，包括生成器和带`yield`的`generator function`。
 
-这些可以直接作用于`for`循环的对象统称为可迭代对象：`Iterable`。
+这些可以直接作用于`for`循环的对象统称为可迭代对象：`Iterable`。  
+
+函数式编程
+-------
+### 高阶函数
+`map()`函数接收两个参数，一个是函数，一个是`Iterable`，`map`将传入的函数依次作用到序列的每个元素，并把结果作为新的`Iterator`返回。  
+练习  
+利用map()函数，把用户输入的不规范的英文名字，变为首字母大写，其他小写的规范名字。输入：['adam', 'LISA', 'barT']，输出：['Adam', 'Lisa', 'Bart']：
+```
+def normalize(x):
+    def f(x):
+        return x.lower()
+    w=map(f,x)
+    z=[]
+    for j,value in enumerate(w):
+        print(j,value)
+        if(j==0):
+            value=value.upper()
+            print(value)
+        z.append(value)
+    return ''.join(z)
+    
+print(list(map(normalize,['adam', 'LISA', 'barT'])))
+```
+`reduce`把一个函数作用在一个序列`[x1, x2, x3, ...]`上，这个函数必须接收两个参数，`reduce`把结果继续和序列的下一个元素做累积计算，其效果就是：
+```
+reduce(f, [x1, x2, x3, x4]) = f(f(f(x1, x2), x3), x4)
+```
+和`map()`类似，`filter()`也接收一个函数和一个序列。和`map()`不同的是，`filter()`把传入的函数依次作用于每个元素，然后根据返回值是`True`还是`False`决定保留还是丢弃该元素。  
+```
+def is_odd(n):
+    return n % 2 == 1
+
+list(filter(is_odd, [1, 2, 4, 5, 6, 9, 10, 15]))
+# 结果: [1, 5, 9, 15]
+```
+`sorted()`函数也是一个高阶函数，它还可以接收一个`key`函数来实现自定义的排序，例如按绝对值大小排序：
+```
+>>> sorted([36, 5, -12, 9, -21], key=abs)
+[5, 9, -12, -21, 36]
+```
+### 返回函数
+如果不需要立刻求和，而是在后面的代码中，根据需要再计算怎么办？可以不返回求和的结果，而是返回求和的函数：
+```
+def lazy_sum(*args):
+    def sum():
+        ax = 0
+        for n in args:
+            ax = ax + n
+        return ax
+    return sum
+```
+当我们调用`lazy_sum()`时，返回的并不是求和结果，而是求和函数：
+```
+>>> f = lazy_sum(1, 3, 5, 7, 9)
+>>> f
+<function lazy_sum.<locals>.sum at 0x101c6ed90>
+```
+调用函数f时，才真正计算求和的结果：
+```
+>>> f()
+25
+```
+**闭包**  
+返回闭包时牢记的一点就是：返回函数不要引用任何循环变量，或者后续会发生变化的变量。
+### 匿名函数
+在Python中，对匿名函数提供了有限支持。还是以`map()`函数为例，计算`f(x)=x^2`时，除了定义一个`f(x)`的函数外，还可以直接传入匿名函数：
+```
+>>> list(map(lambda x: x * x, [1, 2, 3, 4, 5, 6, 7, 8, 9]))
+[1, 4, 9, 16, 25, 36, 49, 64, 81]
+```
+### 装饰器
+本质上，`decorator`就是一个返回函数的高阶函数。所以，我们要定义一个能打印日志的`decorator`，可以定义如下：
+```
+def log(func):
+    def wrapper(*args, **kw):
+        print('call %s():' % func.__name__)
+        return func(*args, **kw)
+    return wrapper
+```
+观察上面的`log`，因为它是一个`decorator`，所以接受一个函数作为参数，并返回一个函数。我们要借助`Python`的`@`语法，把`decorator`置于函数的定义处：
+```
+@log
+def now():
+    print('2015-3-25')
+```
+调用`now()`函数，不仅会运行`now()`函数本身，还会在运行`now()`函数前打印一行日志：
+```
+>>> now()
+call now():
+2015-3-25
+```
+一个完整的`decorator`的写法如下：
+```
+import functools
+
+def log(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kw):
+        print('call %s():' % func.__name__)
+        return func(*args, **kw)
+    return wrapper
+```
+针对带参数的`decorator`：
+```
+import functools
+
+def log(text):
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kw):
+            print('%s %s():' % (text, func.__name__))
+            return func(*args, **kw)
+        return wrapper
+    return decorator
+```
+### 偏函数
+`functools.partial`就是帮助我们创建一个偏函数的
+```
+>>> import functools
+>>> int2 = functools.partial(int, base=2)
+>>> int2('1000000')
+64
+>>> int2('1010101')
+85
+```
