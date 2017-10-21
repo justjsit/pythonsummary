@@ -353,3 +353,177 @@ def log(text):
 >>> int2('1010101')
 85
 ```
+面向对象编程
+------
+面向对象编程——`Object Oriented Programming`，简称`OOP`，是一种程序设计思想。`OOP`把对象作为程序的基本单元，一个对象包含了数据和操作数据的函数。  
+面向对象的设计思想是抽象出`Class`，根据`Class`创建`Instance`。  
+面向对象的抽象程度又比函数要高，因为一个`Class`既包含**数据**，又包含**操作数据的方法**。  
+**数据封装、继承和多态**是面向对象的三大特点。
+### 类和实例
+面向对象最重要的概念就是类（`Class`）和实例（`Instance`），必须牢记类是抽象的模板，比如`Student`类，而实例是根据类创建出来的一个个具体的“对象”，每个对象都拥有相同的方法，但各自的数据可能不同。  
+由于类可以起到模板的作用，因此，可以在创建实例的时候，把一些我们认为必须绑定的属性强制填写进去。通过定义一个特殊的`__init__`方法，在创建实例的时候，就把`name`，`score`等属性绑上去：
+```
+class Student(object):
+
+    def __init__(self, name, score):
+        self.name = name
+        self.score = score
+```
+注意到`__init__`方法的第一个参数永远是`self`，表示创建的实例本身，因此，在`__init__`方法内部，就可以把各种属性绑定到`self`，因为`self`就指向创建的实例本身。  
+**数据封装**
+这些封装数据的函数是和`Student`类本身是关联起来的，我们称之为类的方法：
+```
+class Student(object):
+
+    def __init__(self, name, score):
+        self.name = name
+        self.score = score
+
+    def print_score(self):
+        print('%s: %s' % (self.name, self.score))
+```
+### 访问限制
+如果要让内部属性不被外部访问，可以把属性的名称前加上两个下划线`__`，在`Python`中，实例的变量名如果以`__`开头，就变成了一个私有变量（`private`），只有内部可以访问，外部不能访问，所以，我们把`Student`类改一改：
+```
+class Student(object):
+
+    def __init__(self, name, score):
+        self.__name = name
+        self.__score = score
+
+    def print_score(self):
+        print('%s: %s' % (self.__name, self.__score))
+```
+改完后，对于外部代码来说，没什么变动，但是已经无法从外部访问实例变量`.__name`和实例变量`.__score`了。  
+但是如果外部代码要获取`name`和`score`怎么办？可以给`Student`类增加`get_name`和`get_score`这样的方法：
+```
+class Student(object):
+    ...
+
+    def get_name(self):
+        return self.__name
+
+    def get_score(self):
+        return self.__score
+```
+如果又要允许外部代码修改`score`怎么办？可以再给Student类增加`set_score`方法：
+```
+class Student(object):
+    ...
+
+    def set_score(self, score):
+        self.__score = score
+```
+你也许会问，原先那种直接通过`bart.score = 59`也可以修改啊，为什么要定义一个方法大费周折？因为在方法中，可以对参数做检查，避免传入无效的参数：
+```
+class Student(object):
+    ...
+
+    def set_score(self, score):
+        if 0 <= score <= 100:
+            self.__score = score
+        else:
+            raise ValueError('bad score')
+
+```
+### 继承和多态
+继承有什么好处？最大的好处是子类获得了父类的全部功能。继承的第二个好处需要我们对代码做一点改进。  
+继承可以把父类的所有功能都直接拿过来，这样就不必重零做起，子类只需要新增自己特有的方法，也可以把父类不适合的方法覆盖重写。
+### 获取对象信息
+**使用type()**
+```
+>>> type(123)
+<class 'int'>
+>>> type('str')
+<class 'str'>
+>>> type(None)
+<type(None) 'NoneType'>
+>>> type(abs)
+<class 'builtin_function_or_method'>
+>>> type(a)
+<class '__main__.Animal'>
+```
+如果要判断一个对象是否是函数怎么办？可以使用`types`模块中定义的常量：
+```
+>>> import types
+>>> def fn():
+...     pass
+...
+>>> type(fn)==types.FunctionType
+True
+>>> type(abs)==types.BuiltinFunctionType
+True
+>>> type(lambda x: x)==types.LambdaType
+True
+>>> type((x for x in range(10)))==types.GeneratorType
+True
+```
+**使用isinstance()**  
+对于`class`的继承关系来说，使用`type()`就很不方便。我们要判断`class`的类型，可以使用`isinstance()`函数。  
+如果继承关系是：
+```
+object -> Animal -> Dog -> Husky
+```
+那么，`isinstance()`就可以告诉我们，一个对象是否是某种类型。先创建3种类型的对象：
+```
+>>> a = Animal()
+>>> d = Dog()
+>>> h = Husky()
+>>> isinstance(h, Husky)
+True
+```
+能用`type()`判断的基本类型也可以用`isinstance()`判断：
+```
+>>> isinstance('a', str)
+True
+>>> isinstance(123, int)
+True
+>>> isinstance(b'a', bytes)
+True
+```
+并且还可以判断一个变量是否是某些类型中的一种，比如下面的代码就可以判断是否是`list`或者`tuple`：
+```
+>>> isinstance([1, 2, 3], (list, tuple))
+True
+>>> isinstance((1, 2, 3), (list, tuple))
+True
+```
+**使用dir()**  
+如果要获得一个对象的所有属性和方法，可以使用`dir()`函数，它返回一个包含字符串的`list`。
+配合`getattr()`、`setattr()`以及`hasattr()`，我们可以直接操作一个对象的状态：
+```
+>>> class MyObject(object):
+...     def __init__(self):
+...         self.x = 9
+...     def power(self):
+...         return self.x * self.x
+...
+>>> obj = MyObject()
+```
+紧接着，可以测试该对象的属性：
+```
+>>> hasattr(obj, 'x') # 有属性'x'吗？
+True
+>>> obj.x
+9
+>>> hasattr(obj, 'y') # 有属性'y'吗？
+False
+>>> setattr(obj, 'y', 19) # 设置一个属性'y'
+>>> hasattr(obj, 'y') # 有属性'y'吗？
+True
+>>> getattr(obj, 'y') # 获取属性'y'
+19
+>>> obj.y # 获取属性'y'
+19
+```
+### 实例属性和类属性
+给实例绑定属性的方法是通过实例变量，或者通过`self`变量：
+```
+class Student(object):
+    def __init__(self, name):
+        self.name = name
+
+s = Student('Bob')
+s.score = 90
+```
+在编写程序的时候，千万不要把实例属性和类属性使用相同的名字，因为相同名称的实例属性将屏蔽掉类属性，但是当你删除实例属性后，再使用相同的名称，访问到的将是类属性。
