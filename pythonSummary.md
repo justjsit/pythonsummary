@@ -526,4 +526,117 @@ class Student(object):
 s = Student('Bob')
 s.score = 90
 ```
-在编写程序的时候，千万不要把实例属性和类属性使用相同的名字，因为相同名称的实例属性将屏蔽掉类属性，但是当你删除实例属性后，再使用相同的名称，访问到的将是类属性。
+在编写程序的时候，千万不要把实例属性和类属性使用相同的名字，因为相同名称的实例属性将屏蔽掉类属性，但是当你删除实例属性后，再使用相同的名称，访问到的将是类属性。  
+
+常用内建模块
+-------------
+### datetime
+**获取当前日期和时间**
+```
+>>>from datetime import datetime
+>>>now = datetime.now()
+>>>print(now)
+2017-10-25 10:39:57.156641
+>>>print(type(now))
+<class 'datetime.datetime'>
+```
+**获取指定日期和时间**
+```
+>>> from datetime import datetime
+>>> dt = datetime(2015, 4, 19, 12, 20) # 用指定日期时间创建datetime
+>>> print(dt)
+2015-04-19 12:20:00
+```
+**datetime转换为timestamp**
+```
+>>> from datetime import datetime
+>>> dt = datetime(2015, 4, 19, 12, 20) # 用指定日期时间创建datetime
+>>> dt.timestamp() # 把datetime转换为timestamp
+1429417200.0
+```
+**timestamp转换为datetime**
+```
+>>> from datetime import datetime
+>>> t = 1429417200.0
+>>> print(datetime.fromtimestamp(t))
+2015-04-19 12:20:00
+```
+timestamp也可以直接被转换到UTC标准时区的时间：
+```
+>>> from datetime import datetime
+>>> t = 1429417200.0
+>>> print(datetime.fromtimestamp(t)) # 本地时间
+2015-04-19 12:20:00
+>>> print(datetime.utcfromtimestamp(t)) # UTC时间
+2015-04-19 04:20:00
+```
+**str转换为datetime**
+```
+>>> from datetime import datetime
+>>> cday = datetime.strptime('2015-6-1 18:19:59', '%Y-%m-%d %H:%M:%S')
+>>> print(cday)
+2015-06-01 18:19:59
+```
+**datetime转换为str**
+```
+>>> from datetime import datetime
+>>> now = datetime.now()
+>>> print(now.strftime('%a, %b %d %H:%M'))
+Mon, May 05 16:28
+```
+**datetime加减**
+```
+>>> from datetime import datetime, timedelta
+>>> now = datetime.now()
+>>> now
+datetime.datetime(2015, 5, 18, 16, 57, 3, 540997)
+>>> now + timedelta(hours=10)
+datetime.datetime(2015, 5, 19, 2, 57, 3, 540997)
+>>> now - timedelta(days=1)
+datetime.datetime(2015, 5, 17, 16, 57, 3, 540997)
+>>> now + timedelta(days=2, hours=12)
+datetime.datetime(2015, 5, 21, 4, 57, 3, 540997)
+```
+**本地时间转换为UTC时间**
+```
+>>> from datetime import datetime, timedelta, timezone
+>>> tz_utc_8 = timezone(timedelta(hours=8)) # 创建时区UTC+8:00
+>>> now = datetime.now()
+>>> now
+datetime.datetime(2015, 5, 18, 17, 2, 10, 871012)
+>>> dt = now.replace(tzinfo=tz_utc_8) # 强制设置为UTC+8:00
+>>> dt
+datetime.datetime(2015, 5, 18, 17, 2, 10, 871012, tzinfo=datetime.timezone(datetime.timedelta(0, 28800)))
+```
+**时区转换**
+```
+# 拿到UTC时间，并强制设置时区为UTC+0:00:
+>>> utc_dt = datetime.utcnow().replace(tzinfo=timezone.utc)
+>>> print(utc_dt)
+2015-05-18 09:05:12.377316+00:00
+# astimezone()将转换时区为北京时间:
+>>> bj_dt = utc_dt.astimezone(timezone(timedelta(hours=8)))
+>>> print(bj_dt)
+2015-05-18 17:05:12.377316+08:00
+# astimezone()将转换时区为东京时间:
+>>> tokyo_dt = utc_dt.astimezone(timezone(timedelta(hours=9)))
+>>> print(tokyo_dt)
+2015-05-18 18:05:12.377316+09:00
+# astimezone()将bj_dt转换时区为东京时间:
+>>> tokyo_dt2 = bj_dt.astimezone(timezone(timedelta(hours=9)))
+>>> print(tokyo_dt2)
+2015-05-18 18:05:12.377316+09:00
+```
+**练习**  
+假设你获取了用户输入的日期和时间如2015-1-21 9:01:30，以及一个时区信息如UTC+5:00，均是str，请编写一个函数将其转换为timestamp：
+```
+from datetime import datetime,timedelta,timezone
+def to_timestamp(de_str,tz_str):
+    tzstr=tz_str[3:-3]
+    tz_str=timezone(timedelta(hours=int(tzstr)))
+    cday = datetime.strptime(de_str, '%Y-%m-%d %H:%M:%S').replace(tzinfo=tz_str)
+    return cday.timestamp()
+t1 = to_timestamp('2015-6-1 08:10:30', 'UTC+7:00')
+print(t1)
+```
+
